@@ -1,25 +1,26 @@
-import React from 'react';
-import logo from './logo.svg';
-
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+interface Repository {
+  id: number;
+  name: string;
+  full_name: string;
+  description: string | null;
+  html_url: string;
+  stargazers_count: number;
+  forks_count: number;
+  watchers_count: number;
+  language: string | null;
+  updated_at: string;
+  owner: {
+    login: string;
+    avatar_url: string;
+    html_url: string;
+  };
 }
 
-export default App;
+interface SearchResponse {
+  total_count: number;
+  incomplete_results: boolean;
+  items: Repository[];
+}
+
+const GITHUB_API_BASE = 'https://api.github.com/search/repositories';
+const ITEMS_PER_PAGE = 10;
