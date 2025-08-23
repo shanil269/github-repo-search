@@ -80,4 +80,210 @@ export default function GitHubRepoSearch() {
             setLoading(false)
         }
     }
+
+    const handleSearch = (e?: any) => {
+        if (e && e.preventDefault) e.preventDefault()
+        setSearchTerm(query)
+        setCurrentPage(1)
+    }
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page)
+    }
+
+    useEffect(() => {
+        if (searchTerm) {
+            searchRepositories(currentPage)
+        }
+    }, [searchTerm, currentPage])
+
+    const formatDate = (dateString: string) => {
+        return new Date(dateString).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        })
+    }
+
+    const formatNumber = (num: number) => {
+        if (num >= 1000000) {
+            return (num / 1000000).toFixed(1) + "M"
+        }
+        if (num >= 1000) {
+            return (num / 1000).toFixed(1) + "k"
+        }
+        return num.toString()
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <div className="container mx-auto px-4 py-8 max-w-6xl">
+                <header className="text-center mb-8">
+                    <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                        GitHub Repository Search
+                    </h1>
+                    <p className="text-gray-600">
+                        Discover amazing repositories on GitHub
+                    </p>
+                </header>
+
+                <div className="mb-8">
+                    <div className="flex flex-col sm:flex-row gap-4 items-center">
+                        <div className="flex-1 relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <input
+                                type="text"
+                                value={query}
+                                onChange={(e) => setQuery(e.target.value)}
+                                onKeyDown={(e) =>
+                                    e.key === "Enter" && handleSearch(e)
+                                }
+                                placeholder="Search repositories... (e.g., react, javascript, machine learning)"
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                            />
+                        </div>
+                        <button
+                            onClick={handleSearch}
+                            disabled={loading || !query.trim()}
+                            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                        >
+                            {loading ? "Searching..." : "Search"}
+                        </button>
+                    </div>
+                </div>
+
+                {searchTerm && (
+                    <div className="mb-6 text-gray-600">
+                        {totalCount > 0 ? (
+                            <>
+                                Found {formatNumber(totalCount)} repositories
+                                for "{searchTerm}"
+                                {totalCount > 1000 && " (showing first 1000)"}
+                            </>
+                        ) : (
+                            `No repositories found for "${searchTerm}"`
+                        )}
+                    </div>
+                )}
+
+                {error && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md mb-6">
+                        {error}
+                    </div>
+                )}
+
+                {loading && (
+                    <div className="text-center py-12">
+                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                        <p className="mt-2 text-gray-600">
+                            Searching repositories...
+                        </p>
+                    </div>
+                )}
+
+                <div className="space-y-6">
+                    {repositories.map((repo) => (
+                        <div
+                            key={repo.id}
+                            className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-6"
+                        >
+                            <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <img
+                                            src={repo.owner.avatar_url}
+                                            alt={repo.owner.login}
+                                            className="w-8 h-8 rounded-full"
+                                        />
+                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                            <User className="w-4 h-4" />
+                                            <a
+                                                href={repo.owner.html_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="hover:text-blue-600"
+                                            >
+                                                {repo.owner.login}
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <h2 className="text-xl font-semibold mb-2">
+                                        <a
+                                            href={repo.html_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-600 hover:text-blue-800 flex items-center gap-2"
+                                        >
+                                            {repo.name}
+                                            <ExternalLink className="w-4 h-4" />
+                                        </a>
+                                    </h2>
+
+                                    {repo.description && (
+                                        <p className="text-gray-700 mb-3">
+                                            {repo.description}
+                                        </p>
+                                    )}
+
+                                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                        {repo.language && (
+                                            <div className="flex items-center gap-1">
+                                                <div className="w-3 h-3 rounded-full bg-blue-400"></div>
+                                                <span>{repo.language}</span>
+                                            </div>
+                                        )}
+                                        <div className="flex items-center gap-1">
+                                            <Calendar className="w-4 h-4" />
+                                            <span>
+                                                Updated{" "}
+                                                {formatDate(repo.updated_at)}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex lg:flex-col gap-4 lg:gap-2 lg:items-end">
+                                    <div className="flex items-center gap-1 text-sm">
+                                        <Star className="w-4 h-4 text-yellow-500" />
+                                        <span className="font-medium">
+                                            {formatNumber(
+                                                repo.stargazers_count
+                                            )}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-1 text-sm">
+                                        <GitFork className="w-4 h-4 text-gray-500" />
+                                        <span className="font-medium">
+                                            {formatNumber(repo.forks_count)}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-1 text-sm">
+                                        <Eye className="w-4 h-4 text-gray-500" />
+                                        <span className="font-medium">
+                                            {formatNumber(repo.watchers_count)}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {repositories.length === 0 &&
+                    !loading &&
+                    searchTerm &&
+                    !error && (
+                        <div className="text-center py-12">
+                            <p className="text-gray-600 mb-4">
+                                No repositories found for your search.
+                            </p>
+                            <p className="text-gray-500 text-sm">
+                                Try different keywords or check your spelling.
+                            </p>
+                        </div>
+                    )}
+            </div>
+        </div>
+    )
 }
