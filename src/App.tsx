@@ -45,4 +45,39 @@ export default function GitHubRepoSearch() {
     const [totalCount, setTotalCount] = useState(0)
 
     const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
+
+    const searchRepositories = async (page: number = 1) => {
+        if (!searchTerm.trim()) return
+
+        setLoading(true)
+        setError("")
+
+        try {
+            const params = new URLSearchParams({
+                q: searchTerm,
+                sort: "stars",
+                order: "desc",
+                page: page.toString(),
+                per_page: ITEMS_PER_PAGE.toString(),
+            })
+
+            const response = await fetch(`${GITHUB_API_BASE}?${params}`)
+
+            if (!response.ok) {
+                throw new Error(
+                    `Error: ${response.status} ${response.statusText}`
+                )
+            }
+
+            const data: SearchResponse = await response.json()
+            setRepositories(data.items)
+            setTotalCount(data.total_count)
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "An error occurred")
+            setRepositories([])
+            setTotalCount(0)
+        } finally {
+            setLoading(false)
+        }
+    }
 }
