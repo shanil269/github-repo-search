@@ -8,6 +8,7 @@ import {
     User,
     ExternalLink,
 } from "lucide-react"
+
 interface Repository {
     id: number
     name: string
@@ -113,6 +114,78 @@ export default function GitHubRepoSearch() {
             return (num / 1000).toFixed(1) + "k"
         }
         return num.toString()
+    }
+
+    const truncateDescription = (
+        description: string,
+        maxWords: number = 50
+    ) => {
+        const words = description.split(" ")
+        if (words.length <= maxWords) {
+            return description
+        }
+        return words.slice(0, maxWords).join(" ") + "..."
+    }
+
+    const renderPagination = () => {
+        if (totalPages <= 1) return null
+
+        const pages = []
+        const maxVisiblePages = 5
+        let startPage = Math.max(
+            1,
+            currentPage - Math.floor(maxVisiblePages / 2)
+        )
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
+
+        if (endPage - startPage < maxVisiblePages - 1) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1)
+        }
+
+        // Previous button
+        pages.push(
+            <button
+                key="prev"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2 mx-1 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                Previous
+            </button>
+        )
+
+        // Page numbers
+        for (let i = startPage; i <= endPage; i++) {
+            pages.push(
+                <button
+                    key={i}
+                    onClick={() => handlePageChange(i)}
+                    className={`px-3 py-2 mx-1 border rounded-md ${
+                        i === currentPage
+                            ? "bg-blue-500 text-white border-blue-500"
+                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                    }`}
+                >
+                    {i}
+                </button>
+            )
+        }
+
+        // Next button
+        pages.push(
+            <button
+                key="next"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 mx-1 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                Next
+            </button>
+        )
+
+        return (
+            <div className="flex justify-center items-center mt-8">{pages}</div>
+        )
     }
 
     return (
@@ -222,7 +295,9 @@ export default function GitHubRepoSearch() {
 
                                     {repo.description && (
                                         <p className="text-gray-700 mb-3">
-                                            {repo.description}
+                                            {truncateDescription(
+                                                repo.description
+                                            )}
                                         </p>
                                     )}
 
@@ -269,6 +344,8 @@ export default function GitHubRepoSearch() {
                         </div>
                     ))}
                 </div>
+
+                {renderPagination()}
 
                 {repositories.length === 0 &&
                     !loading &&
